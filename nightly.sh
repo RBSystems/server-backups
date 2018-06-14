@@ -4,13 +4,18 @@
 # for each directory to be backed up you must add an output directory,
 ODIR=(
 /mnt/observe/backups/$HOSTNAME/content
-/mnt/observe/backups/$HOSTNAME/www)
+/mnt/observe/backups/$HOSTNAME/www
+/mnt/observe/backups/$HOSTNAME/db)
 
 BDIR=(
 /usr/local/WowzaStreamingEngine/content
-/var/www/v3)
+/var/www/v3
+/usr/local/valt/backup)
 
 LOGDIR=/usr/sbin/backups/logs
+
+# Number of days to retain backups
+RETDAYS=90
 
 ELKADDR=http://avmetrics.byu.edu/backups/observation
 ########################################################################
@@ -73,6 +78,23 @@ do
 	((var++))      	
 done
 
+# Cleaning up old backups -  
+for R in ${ODIR[@]}
+do
+	INCREMENTALDIR=${ODIR[$var]}/incremental
+	OPTS="-maxdepth 1 -type d -mtime +$RETDAYS"
+
+	#echo $R
+	echo ${ODIR[$var]}
+	echo "-------------Removing Old Incrementals >> $INCREMENTALDIR--------------" >> $LOGDIR/$BACKUPDIR.txt
+	echo "" >> $LOGDIR/$BACKUPDIR.txt
+
+      	# find all the incrementals that are older than the retention period
+      	find $INCREMENTALDIR $OPTS | >> $LOGDIR/$BACKUPDIR.txt
+	echo "" >> $LOGDIR/$BACKUPDIR.txt
+	
+	((var++))      	
+done
 
 DATE=`date +%Y-%m-%dT%H:%M:%S%z`
 
